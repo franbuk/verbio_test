@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 #include <stdio.h>
+#include <vector>
 
 using namespace std;
 
@@ -109,129 +110,90 @@ bool isMult(int currentNumber) {
   return (currentNumber == 100 || currentNumber == 1000 || currentNumber == pow(10, 6) || currentNumber == pow(10, 9));
 }
 
-bool calcular_numero(int & totalWords, string currentword, string & income, string & result) {
+bool calcular_numero(int & totalWords, string& currentword, string& income, string& result) {
   string word, nextWord;
   int currentNumber = 0;
   int multiplied = 1;
   int finalNumber = 0;
-  if (totalWords == 1) {
-    word = getWord(income);
-    if (isMult(numbers.find(lowerCase(word)) -> second)) // to avoid things like "hundred" in the income. It must be "one hundred"
-      return 1;
-    finalNumber += numbers.find(lowerCase(word)) -> second;
-    result += to_string(finalNumber);
-    totalWords--;
-  } else if (totalWords == 2) {
-    word = currentword;
-    nextWord = getWord(income);
-
-    currentNumber = numbers.find(lowerCase(word)) -> second;
-    multiplied = numbers.find(lowerCase(nextWord)) -> second;
-
-    if (numbers.find(lowerCase(nextWord)) == numbers.end()) // Cases like "I have one pizza". Pizza is not a number and should not be handled.
+    vector<int> calc;//Los numeros sueltos. 
+    vector<int> temp;//Para ir sumando los numeros hasta llegar a un mult.
+    vector<int> sum; // Los numeros para sumar al final
+    
+    word=currentword;
+    
+    while(numbers.find(word) != numbers.end() and totalWords > 0)
     {
-      finalNumber += numbers.find(lowerCase(word)) -> second;
-      result += to_string(finalNumber);
-      result += " " + nextWord;
-    } else //If both are numbers but it makes no sense (ike "one two" in the income)
-    {
-      if (isNotMult(multiplied))
-        return 1;
+        calc.push_back(numbers.find(word)->second);
+        totalWords--;
+        word=getWord(income);
     }
-    finalNumber += currentNumber * multiplied;
-
-    totalWords -= 2;
-  } else {
-    word = currentword;
-    nextWord = getWord(income);
-    cout << "Word: " << word << endl;
-    cout << "nextWord: " << nextWord << endl;
-    cout << "totalWords: " << totalWords << endl;
-
-    while (totalWords / 2 > 0 && numbers.find(lowerCase(word)) -> second && numbers.find(lowerCase(nextWord)) -> second) //both are numbers. 
+    if(totalWords>0)
     {
-      cout << "@@@1" << endl;
-      currentNumber = numbers.find(lowerCase(word)) -> second;
-      multiplied = numbers.find(lowerCase(nextWord)) -> second;
-
-      cout << "currentNumber " << currentNumber << endl;
-      cout << "multiplied " << multiplied << endl;
-
-      if (isNotMult(multiplied)) // Cases like twenty five
-      {
-        finalNumber += currentNumber;
-        finalNumber += multiplied;
-        cout << "Entro por el notmult -> Result: " << finalNumber << endl << endl;
-
-      } else {
-        finalNumber += currentNumber * multiplied;
-        cout << "Entro por el mult -> Result: " << finalNumber << endl << endl;
-      }
-      totalWords -= 2;
-
-      word = getWord(income);
-      nextWord = getWord(income);
-      cout << "Word: " << word << endl;
-      cout << "nextWord: " << nextWord << endl;
-
-      if (totalWords == 0)
-        result += to_string(finalNumber);
-
-      if (numbers.find(lowerCase(word)) == numbers.end()) {
-        finalNumber += numbers.find(lowerCase(word)) -> second;
-        result += to_string(finalNumber) +" ";
-      }
-      
-      if(numbers.find(lowerCase(word)) != numbers.end() && isMult(numbers.find(lowerCase(word))->second)) // one hundred thousand one
-      {
-          finalNumber = finalNumber*numbers.find(lowerCase(word))->second;
-          word=nextWord;
-          nextWord = getWord(income);
-          totalWords --;
-      }
+        currentword=word;
     }
-    if (numbers.find(lowerCase(word)) -> second && numbers.find(lowerCase(nextWord)) == numbers.end()) {
-      cout << "@@@2" << endl;
-      finalNumber += numbers.find(lowerCase(word)) -> second;
-      result += to_string(finalNumber);
-      result += " " + nextWord;
-      cout << "result parcial: " << result << endl;
-      totalWords -= 2;
+    for(int a = 0 ; a<calc.size(); a++)
+    {
+        if(isMult(calc[0]))
+            return 1;
+        else {
+            if(isMult(calc[a]))
+            {
+                cout<<"Is mult: "<<calc[a]<<endl;
+                for(int p = 0 ; p<temp.size(); p++)
+                {
+                    currentNumber+=temp[p];
+                }
+                temp.clear();
+                if(currentNumber!=0)
+                  currentNumber *= calc[a];
+                else
+                    currentNumber= calc[a];
+                sum.push_back(currentNumber);
+                currentNumber=0;
+            }else{
+                cout<<"no es mult: " <<calc[a]<<endl;
+             temp.push_back(calc[a]);
+            }
+        }
     }
     
-    if (numbers.find(lowerCase(word)) == numbers.end() && numbers.find(lowerCase(nextWord)) == numbers.end() && totalWords > 1)
+    if(temp.size() > 0)
     {
-        cout<<"@@@5" <<endl;
-        result += word +" " + nextWord+" ";
-        totalWords -= 2;
+        for(int a = 0 ; a<temp.size(); a++)
+        sum.push_back(temp[a]);
     }
-
-    if (totalWords == 1) {
-      word = getWord(income);
-      cout << "@@@3 " << word << endl;
-
-      if (numbers.find(word) == numbers.end()) //Case: I have one peperonni pizza
-      {
-        cout << "@@@4" << endl;
-        result += " " + word;
-        totalWords--;
-      } else {
-
-        if (isMult(numbers.find(lowerCase(word)) -> second)) //"One hundred thousand" situation
+    cout<<"SUM_size: "<<sum.size()<<"\nVALORES: ";
+    
+   for(int a = 0; a<sum.size(); a++)
+   {
+       cout<<sum[a]<<" ";
+   }
+    cout<<endl;
+    
+    for(int a = 0; a<sum.size()-1; a++)
+    {
+        
+        if(sum[a]>sum[a+1])
         {
-          finalNumber *= numbers.find(lowerCase(word)) -> second;
-          totalWords--;
-          result += to_string(finalNumber);
-        } else {
-          finalNumber += numbers.find(lowerCase(word)) -> second;
-          totalWords--;
-          result += to_string(finalNumber);
+            cout<<sum[a]<<" es mas grande que "<<sum[a+1]<<endl;
+            finalNumber+=sum[a];
+        }else{
+            while(sum[a]<=sum[a+1])
+            {
+                
+                sum[a]=sum[a]*10;
+                cout<<sum[a]/10<<" es mas peque que "<<sum[a+1]<<". Nuevo valor: "<<sum[a]<<endl;
+            }
+            finalNumber+=sum[a];
+            
+            
         }
-      }
     }
-
-  }
-
+    cout<<sum[sum.size()-1]<<endl;
+    finalNumber+=sum[sum.size()-1];
+    cout<<"finalNumber = "<<finalNumber<<endl;
+    result += to_string(finalNumber)+ " ";
+    
   return 0;
 }
 
@@ -254,12 +216,14 @@ int main() {
   string result = "";
 
   //We do not handle words that are nor numbers. 
+  word = getWord(income);
   while (totalWords > 0) {
-    word = getWord(income);
+    
     if (numbers.find(lowerCase(word)) == numbers.end()) {
       result += word;
       result += ' ';
       totalWords--;
+      word = getWord(income);
     } else {
       error = calcular_numero(totalWords, word, income, result);
     }
@@ -270,7 +234,6 @@ int main() {
     result = "Wrong number provided";
     totalWords = 0;
   }
-
   while (totalWords > 0) {
     result += word;
     result += ' ';
